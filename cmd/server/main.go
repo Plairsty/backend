@@ -1,47 +1,53 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"flag"
 	"log"
 	"net"
+	__auth "plairsty/backend/pb"
+	"plairsty/backend/service"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-func UniaryInterceptor(ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (interface{}, error) {
-	log.Println("--> Unary Interceptor", info.FullMethod)
-	return handler(ctx, req)
-}
+const (
+	secretKey     = "secret"
+	tokenDuration = 15 * time.Minute
+)
 
-func StreamInterceptor(srv interface{},
-	ss grpc.ServerStream,
-	info *grpc.StreamServerInfo,
-	handler grpc.StreamHandler,
-) error {
-	log.Println("--> Stream Interceptor", info.FullMethod)
-	return handler(srv, ss)
-}
+var (
+	port = flag.String("port", ":8080", "Port to connect to")
+)
 
 func main() {
-	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(UniaryInterceptor),
-		grpc.StreamInterceptor(StreamInterceptor),
-	)
-	reflection.Register(grpcServer)
-	address := fmt.Sprintf(":%d", 8080)
-	lis, err := net.Listen("tcp", address)
+	listenc, err := net.Listen("tcp", *port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	defer lis.Close()
-	log.Println("Server is running on", address)
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %s", err)
+	defer listenc.Close()
+	log.Printf("Server is listening on port %s", *port)
+	log.Printf("https://localhost%s/", *port)
+
+	server := grpc.NewServer(
+		grpc.UnaryInterceptor(service.UniaryInterceptor),
+		grpc.StreamInterceptor(service.StreamInterceptor),
+	)
+
+	userStore := service.NewInMemoryUserStore()
+	err = service.SeedUsers(userStore)
+	if err != nil {
+		log.Fatalln("Could not seed users", err)
+	}
+	jwtManager := service.NewJWTManager(secretKey, tokenDuration)
+
+	authServer := service.NewAuthServer(userStore, jwtManager)
+	__auth.RegisterAuthServiceServer(server, authServer)
+
+	reflection.Register(server)
+	// __auth.RegisterGreetServiceServer(server, &serverImpl{})
+	if err := server.Serve(listenc); err != nil {
+		log.Fatalf("failed to serve: %v", err)
 	}
 }
