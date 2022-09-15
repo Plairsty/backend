@@ -49,7 +49,7 @@ func createUser(userStore UserStore, username, password, role string) error {
 	return userStore.Save(user)
 }
 
-func seedUsers(userStore UserStore) error {
+func SeedUsers(userStore UserStore) error {
 	err := createUser(userStore, "admin1", "secret", "admin")
 	if err != nil {
 		return err
