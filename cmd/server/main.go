@@ -42,7 +42,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	defer lis.Close()
+	defer func(conn net.Listener) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("failed to close connection: %v\n", err)
+		}
+	}(lis)
 	log.Printf("Server is listening on port %s", *port)
 	log.Printf("https://localhost%s/", *port)
 
@@ -70,6 +75,10 @@ func main() {
 	}
 }
 
+// If target RPC method is not in accessibleRoles map, then it is publicly accessible
 func accessibleRoles() map[string][]string {
-	return nil
+	const greetServicePath = "/greet.GreetService/"
+	return map[string][]string{
+		greetServicePath + "Greet": {"user"},
+	}
 }
