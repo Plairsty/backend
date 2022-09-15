@@ -24,7 +24,7 @@ func NewAuthServer(userStore UserStore, jwtManager *JWTManager) *AuthService {
 }
 
 func (server *AuthService) Login(
-	ctx context.Context,
+	_ context.Context,
 	req *__pb.LoginRequest,
 ) (*__pb.LoginResponse, error) {
 	user, err := server.userStore.Find(req.Username)
@@ -50,7 +50,7 @@ func (server *AuthService) Login(
 	return res, nil
 }
 
-// Invalidate access token and refresh token
+// Logout Invalidate access token and refresh token
 // Possible ways:
 // We can blacklist the token in the database
 // For this using redis would be a good idea as the data has a short TTL
@@ -60,8 +60,8 @@ func (server *AuthService) Login(
 // We can decode the token and check the expiry time
 // Set the expiry time in redis to the expiry time of the token
 func (server *AuthService) Logout(
-	ctx context.Context,
-	req *__pb.LogoutRequest,
+	_ context.Context,
+	_ *__pb.LogoutRequest,
 ) (*__pb.LogoutResponse, error) {
 	// TODO: implement
 	return nil, nil
