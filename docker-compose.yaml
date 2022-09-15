@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/code
+    
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  
+  postgres:
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
