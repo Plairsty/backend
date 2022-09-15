@@ -46,9 +46,12 @@ func main() {
 	log.Printf("Server is listening on port %s", *port)
 	log.Printf("https://localhost%s/", *port)
 
+	jwtManager := service.NewJWTManager(secretKey, tokenDuration, refreshTokenDuration)
+	interceptor := service.NewAuthInterceptor(jwtManager, accessibleRoles())
+
 	server := grpc.NewServer(
-		grpc.UnaryInterceptor(service.UnaryInterceptor),
-		grpc.StreamInterceptor(service.StreamInterceptor),
+		grpc.UnaryInterceptor(interceptor.Unary()),
+		grpc.StreamInterceptor(interceptor.Stream()),
 	)
 
 	userStore := service.NewInMemoryUserStore()
@@ -56,14 +59,17 @@ func main() {
 	if err != nil {
 		log.Fatalln("Could not seed users", err)
 	}
-	jwtManager := service.NewJWTManager(secretKey, tokenDuration, refreshTokenDuration)
-
 	authServer := service.NewAuthServer(userStore, jwtManager)
-	__pb.RegisterAuthServiceServer(server, authServer)
 
+	__pb.RegisterAuthServiceServer(server, authServer)
 	__pb.RegisterGreetServiceServer(server, &serverImpl{})
+
 	reflection.Register(server)
 	if err := server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func accessibleRoles() map[string][]string {
+	return nil
 }
