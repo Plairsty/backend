@@ -27,7 +27,7 @@ type serverImpl struct {
 	__pb.UnimplementedGreetServiceServer
 }
 
-func (*serverImpl) Greet(ctx context.Context,
+func (*serverImpl) Greet(_ context.Context,
 	in *__pb.GreetRequest,
 ) (*__pb.GreetResponse, error) {
 	firstname := in.GetGreeting().GetFirstName()
@@ -38,16 +38,16 @@ func (*serverImpl) Greet(ctx context.Context,
 }
 
 func main() {
-	listenc, err := net.Listen("tcp", *port)
+	lis, err := net.Listen("tcp", *port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	defer listenc.Close()
+	defer lis.Close()
 	log.Printf("Server is listening on port %s", *port)
 	log.Printf("https://localhost%s/", *port)
 
 	server := grpc.NewServer(
-		grpc.UnaryInterceptor(service.UniaryInterceptor),
+		grpc.UnaryInterceptor(service.UnaryInterceptor),
 		grpc.StreamInterceptor(service.StreamInterceptor),
 	)
 
@@ -63,7 +63,7 @@ func main() {
 
 	__pb.RegisterGreetServiceServer(server, &serverImpl{})
 	reflection.Register(server)
-	if err := server.Serve(listenc); err != nil {
+	if err := server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }

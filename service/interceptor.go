@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func UniaryInterceptor(ctx context.Context,
+func UnaryInterceptor(ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
@@ -23,4 +23,16 @@ func StreamInterceptor(srv interface{},
 ) error {
 	log.Println("--> Stream Interceptor", info.FullMethod)
 	return handler(srv, ss)
+}
+
+func (interceptor *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
+	return func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (resp interface{}, err error) {
+		log.Println("--> Unary Auth Interceptor", info.FullMethod)
+		return handler(ctx, req)
+	}
 }
