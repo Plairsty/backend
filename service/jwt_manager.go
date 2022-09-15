@@ -32,11 +32,12 @@ func NewJWTManager(secretKey string, tokenDuration, refreshTokenDuration time.Du
 	}
 }
 
-func userClaimProvider(username, role string, expiresAt time.Duration) UserClaims {
+func userClaimProvider(username, role, tokenType string, expiresAt time.Duration) UserClaims {
 	return UserClaims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(expiresAt).Unix(),
 			Issuer:    "plairsty",
+			Subject:   tokenType,
 		},
 		Username: username,
 		Role:     role,
@@ -44,8 +45,8 @@ func userClaimProvider(username, role string, expiresAt time.Duration) UserClaim
 }
 
 func (manager *JWTManager) Generate(user *User) (JWTToken, error) {
-	claims := userClaimProvider(user.Username, user.Role, manager.tokenDuration)
-	refreshClaims := userClaimProvider(user.Username, user.Role, manager.refreshTokenDuration)
+	claims := userClaimProvider(user.Username, user.Role, "access_token", manager.tokenDuration)
+	refreshClaims := userClaimProvider(user.Username, user.Role, "refresh_token", manager.refreshTokenDuration)
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
