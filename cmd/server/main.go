@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net"
-	__auth "plairsty/backend/pb"
+	__pb "plairsty/backend/pb"
 	"plairsty/backend/service"
 	"time"
 
@@ -13,13 +14,28 @@ import (
 )
 
 const (
-	secretKey     = "secret"
-	tokenDuration = 15 * time.Minute
+	secretKey            = "secret"
+	tokenDuration        = 15 * time.Minute
+	refreshTokenDuration = 7 * 24 * time.Hour
 )
 
 var (
 	port = flag.String("port", ":8080", "Port to connect to")
 )
+
+type serverImpl struct {
+	__pb.UnimplementedGreetServiceServer
+}
+
+func (*serverImpl) Greet(ctx context.Context,
+	in *__pb.GreetRequest,
+) (*__pb.GreetResponse, error) {
+	firstname := in.GetGreeting().GetFirstName()
+	res := &__pb.GreetResponse{
+		Result: firstname + in.GetGreeting().GetLastName(),
+	}
+	return res, nil
+}
 
 func main() {
 	listenc, err := net.Listen("tcp", *port)
@@ -40,13 +56,13 @@ func main() {
 	if err != nil {
 		log.Fatalln("Could not seed users", err)
 	}
-	jwtManager := service.NewJWTManager(secretKey, tokenDuration)
+	jwtManager := service.NewJWTManager(secretKey, tokenDuration, refreshTokenDuration)
 
 	authServer := service.NewAuthServer(userStore, jwtManager)
-	__auth.RegisterAuthServiceServer(server, authServer)
+	__pb.RegisterAuthServiceServer(server, authServer)
 
+	__pb.RegisterGreetServiceServer(server, &serverImpl{})
 	reflection.Register(server)
-	// __auth.RegisterGreetServiceServer(server, &serverImpl{})
 	if err := server.Serve(listenc); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
