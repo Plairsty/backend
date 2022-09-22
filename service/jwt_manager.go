@@ -94,3 +94,8 @@ func (manager *JWTManager) Verify(accessToken string) (*UserClaims, error) {
 	}
 	return claims, nil
 }
+
+
+func (manager *JWTManager) Invalidate(refresh_token string) error {
+	return nil
+}
