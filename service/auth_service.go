@@ -4,6 +4,7 @@ import (
 	"context"
 
 	__pb "plairsty/backend/pb"
+	"plairsty/backend/util"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -90,8 +91,37 @@ func (server *AuthService) Refresh(
 		return nil, status.Errorf(codes.Internal, "cannot invalidate token: %v", err)
 	}
 	res := &__pb.AccessTokenResponse{
-		AccessToken: token.AccessToken,
+		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
+	}
+	return res, nil
+}
+
+func (server *AuthService) Register(
+	_ context.Context,
+	req *__pb.RegisterRequest,
+) (*__pb.RegisterResponse, error) {
+	userStore := NewInMemoryUserStore()
+	registerUser := RequiredUserFields{
+		First_name: req.FirstName,
+		Last_name:  req.LastName,
+		Username:   req.Username,
+		Password:   util.GeneratePassword(),
+		Phone:      req.Phone,
+		Mobile:     req.Mobile,
+		Email:      req.Email,
+		CreatedBy:  "admin", // Since only admin can access this endpoint
+		// But this should be the user who is logged in
+		// TODO: implement
+		Role: req.Role,
+	}
+	// Create a new user
+	err := createUser(userStore, registerUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "cannot create user: %v", err)
+	}
+	res := &__pb.RegisterResponse{
+		Success: true,
 	}
 	return res, nil
 }

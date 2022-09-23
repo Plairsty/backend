@@ -8,20 +8,46 @@ import (
 
 type User struct {
 	Username       string
+	first_name     string
+	last_name      string
+	phone          string
+	mobile         string
+	email          string
 	HashedPassword string
 	Role           string
+	createdBy      string
 }
 
-func NewUser(username, password, role string) (*User, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+type RequiredUserFields struct {
+	Username   string
+	Password   string
+	First_name string
+	Last_name  string
+	Phone      string
+	Mobile     string
+	Email      string
+	CreatedBy  string
+	Role       string
+}
+
+func NewUser(
+	user RequiredUserFields,
+) (*User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
 	return &User{
-		Username:       username,
+		Username:       user.Username,
 		HashedPassword: string(hashedPassword),
-		Role:           role,
+		first_name:     user.First_name,
+		last_name:      user.Last_name,
+		phone:          user.Phone,
+		mobile:         user.Mobile,
+		email:          user.Email,
+		createdBy:      user.CreatedBy,
+		Role:           user.Role,
 	}, nil
 }
 
@@ -39,9 +65,9 @@ func (user *User) Clone() *User {
 	}
 }
 
-func createUser(userStore UserStore, username, password, role string) error {
+func createUser(userStore UserStore, newUser RequiredUserFields) error {
 
-	user, err := NewUser(username, password, role)
+	user, err := NewUser(newUser)
 	if err != nil {
 		return err
 	}
@@ -50,12 +76,50 @@ func createUser(userStore UserStore, username, password, role string) error {
 }
 
 func SeedUsers(userStore UserStore) error {
-	err := createUser(userStore, "admin1", "secret", "admin")
+	adminUser := RequiredUserFields{
+		Username:   "admin",
+		Password:   "secret",
+		First_name: "admin",
+		Last_name:  "admin",
+		Phone:      "admin",
+		Mobile:     "admin",
+		Email:      "admin",
+		CreatedBy:  "system",
+		Role:       "admin",
+	}
+	hrUser := RequiredUserFields{
+		Username:   "hr",
+		Password:   "secret",
+		First_name: "hr",
+		Last_name:  "hr",
+		Phone:      "hr",
+		Mobile:     "hr",
+		Email:      "hr",
+		CreatedBy:  "system",
+		Role:       "hr",
+	}
+	studentUser := RequiredUserFields{
+		Username:   "student",
+		Password:   "secret",
+		First_name: "student",
+		Last_name:  "student",
+		Phone:      "student",
+		Mobile:     "student",
+		Email:      "student",
+		CreatedBy:  "system",
+		Role:       "user",
+	}
+
+	err := createUser(userStore, adminUser)
 	if err != nil {
 		return err
 	}
 	log.Println("Admin user created")
-	err = createUser(userStore, "user1", "secret", "user")
+	err = createUser(userStore, hrUser)
+	if err != nil {
+		return err
+	}
+	err = createUser(userStore, studentUser)
 	if err != nil {
 		return err
 	}

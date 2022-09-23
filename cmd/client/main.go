@@ -59,9 +59,26 @@ func main() {
 	}(conn2)
 
 	c := __pb.NewGreetServiceClient(conn2)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*50)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	Greet(c, ctx)
+}
+
+func Register(ctx context.Context, c __pb.AuthServiceClient) {
+	r, err := c.Register(ctx, &__pb.RegisterRequest{
+		Username:   "20104085",
+		FirstName:  "Gulshan",
+		LastName:   "Yadav",
+		MiddleName: "Mohan",
+		Email:      "gulshan@duck.com",
+		Phone:      "1234567890",
+		Mobile:     "1234567890",
+		Role:       "admin",
+	})
+	if err != nil {
+		log.Fatal("cannot register: ", err)
+	}
+	log.Printf("Register: %t", r.GetSuccess())
 }
 
 func Greet(c __pb.GreetServiceClient, ctx context.Context) {
@@ -79,7 +96,7 @@ func Greet(c __pb.GreetServiceClient, ctx context.Context) {
 }
 
 func authMethods() map[string]bool {
-	const greetServicePath = "/greet.GreetService/"
+	const greetServicePath = "/greet.GreetService"
 	return map[string]bool{
 		greetServicePath + "Greet": true,
 	}
