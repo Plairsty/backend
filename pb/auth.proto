@@ -42,9 +42,11 @@ message RegisterRequest {
     string email = 5;
     string phone = 6;
     string mobile = 7;
+    string role = 8;
 }
 
 message RegisterResponse {
+    string password = 2;
     bool success = 1;
 }
 

@@ -78,7 +78,9 @@ func main() {
 // If target RPC method is not in accessibleRoles map, then it is publicly accessible
 func accessibleRoles() map[string][]string {
 	const greetServicePath = "/greet.GreetService/"
+	const authServicePath = "/auth.AuthService/"
 	return map[string][]string{
-		greetServicePath + "Greet": {"user"},
+		greetServicePath + "Greet":   {"user"},
+		// authServicePath + "Register": {"admin"},
 	}
 }
