@@ -4,7 +4,6 @@ import (
 	"context"
 
 	__pb "plairsty/backend/pb"
-	"plairsty/backend/util"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -101,12 +100,11 @@ func (server *AuthService) Register(
 	_ context.Context,
 	req *__pb.RegisterRequest,
 ) (*__pb.RegisterResponse, error) {
-	userStore := NewInMemoryUserStore()
 	registerUser := RequiredUserFields{
 		First_name: req.FirstName,
 		Last_name:  req.LastName,
 		Username:   req.Username,
-		Password:   util.GeneratePassword(),
+		Password:   "secret",
 		Phone:      req.Phone,
 		Mobile:     req.Mobile,
 		Email:      req.Email,
@@ -116,12 +114,13 @@ func (server *AuthService) Register(
 		Role: req.Role,
 	}
 	// Create a new user
-	err := createUser(userStore, registerUser)
+	err := createUser(server.userStore, registerUser)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "cannot create user: %v", err)
 	}
 	res := &__pb.RegisterResponse{
 		Success: true,
+		Password: registerUser.Password,
 	}
 	return res, nil
 }

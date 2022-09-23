@@ -46,6 +46,7 @@ message RegisterRequest {
 }
 
 message RegisterResponse {
+    string password = 2;
     bool success = 1;
 }
 
