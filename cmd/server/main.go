@@ -5,8 +5,8 @@ import (
 	"flag"
 	"log"
 	"net"
+	"plairsty/backend/infrastructure/service"
 	__pb "plairsty/backend/pb"
-	"plairsty/backend/service"
 	"time"
 
 	"google.golang.org/grpc"
@@ -80,7 +80,7 @@ func accessibleRoles() map[string][]string {
 	const greetServicePath = "/greet.GreetService/"
 	const authServicePath = "/auth.AuthService/"
 	return map[string][]string{
-		greetServicePath + "Greet":   {"user"},
+		greetServicePath + "Greet": {"user"},
 		// authServicePath + "Register": {"admin"},
 	}
 }
